@@ -20,280 +20,341 @@ db = SQLAlchemy(app)
 jwt = JWTManager(app)
 
 # ---------------------
-# MODELS
+# MODELOS
 # ---------------------
-class User(db.Model):
+class Usuario(db.Model):
+    __tablename__ = "usuarios"
+
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    full_name = db.Column(db.String(120))
-    password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.String(30), nullable=False, default='operator')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    usuario = db.Column(db.String(80), unique=True, nullable=False)
+    nome_completo = db.Column(db.String(120))
+    senha_hash = db.Column(db.String(256), nullable=False)
+    papel = db.Column(db.String(30), nullable=False, default='operador')
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+    def definir_senha(self, senha):
+        self.senha_hash = generate_password_hash(senha)
 
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+    def verificar_senha(self, senha):
+        return check_password_hash(self.senha_hash, senha)
 
 
-class Product(db.Model):
+class Produto(db.Model):
+    __tablename__ = "produtos"
+
     id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(64), unique=True, nullable=False)
-    name = db.Column(db.String(200), nullable=False)
-    price = db.Column(db.Float, nullable=False, default=0.0)
-    quantity = db.Column(db.Integer, nullable=False, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    codigo = db.Column(db.String(64), unique=True, nullable=False)
+    nome = db.Column(db.String(200), nullable=False)
+    preco = db.Column(db.Float, nullable=False, default=0.0)
+    quantidade = db.Column(db.Integer, nullable=False, default=0)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
 
 
-class Sale(db.Model):
+class Venda(db.Model):
+    __tablename__ = "vendas"
+
     id = db.Column(db.Integer, primary_key=True)
-    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    criado_por_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=True)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
     total = db.Column(db.Float, nullable=False, default=0.0)
 
 
-class SaleItem(db.Model):
+class ItemVenda(db.Model):
+    __tablename__ = "itens_venda"
+
     id = db.Column(db.Integer, primary_key=True)
-    sale_id = db.Column(db.Integer, db.ForeignKey('sale.id'), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
-    quantity = db.Column(db.Integer, nullable=False)
-    price = db.Column(db.Float, nullable=False)
+    venda_id = db.Column(db.Integer, db.ForeignKey('vendas.id'), nullable=False)
+    produto_id = db.Column(db.Integer, db.ForeignKey('produtos.id'), nullable=False)
+    quantidade = db.Column(db.Integer, nullable=False)
+    preco = db.Column(db.Float, nullable=False)
     subtotal = db.Column(db.Float, nullable=False)
 
 
-class AuditLog(db.Model):
-    id = db.Column(db.Integer, primary_primary=True)
-    user_id = db.Column(db.Integer, nullable=True)
-    action = db.Column(db.String(200))
-    details = db.Column(db.String(1000))
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+class LogAuditoria(db.Model):
+    __tablename__ = "logs_auditoria"
+
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, nullable=True)
+    acao = db.Column(db.String(200))
+    detalhes = db.Column(db.String(1000))
+    registrado_em = db.Column(db.DateTime, default=datetime.utcnow)
 
 # ---------------------
-# Helpers
+# Funções auxiliares
 # ---------------------
-def audit(user_id, action, details=""):
-    log = AuditLog(user_id=user_id, action=action, details=details)
+def registrar_auditoria(usuario_id, acao, detalhes=""):
+    log = LogAuditoria(usuario_id=usuario_id, acao=acao, detalhes=detalhes)
     db.session.add(log)
     db.session.commit()
 
 
-def require_role(*allowed_roles):
-    def decorator(fn):
+def exigir_papel(*papeis_permitidos):
+    def decorador(fn):
         @jwt_required()
         def wrapper(*args, **kwargs):
-            identity = get_jwt_identity()
-            user = User.query.filter_by(username=identity).first()
-            if not user or user.role not in allowed_roles:
-                return jsonify({"msg": "Permissão negada"}), 403
-            return fn(user, *args, **kwargs)
+            identidade = get_jwt_identity()
+            usuario = Usuario.query.filter_by(usuario=identidade).first()
+            if not usuario or usuario.papel not in papeis_permitidos:
+                return jsonify({"mensagem": "Permissão negada"}), 403
+            # passamos o usuário atual como primeiro argumento da função
+            return fn(usuario, *args, **kwargs)
         wrapper.__name__ = fn.__name__
         return wrapper
-    return decorator
+    return decorador
 
 # ---------------------
-# Routes: Auth
+# Rotas: Autenticação
 # ---------------------
 @app.route('/api/auth/login', methods=['POST'])
 def login():
-    data = request.json or {}
-    username = data.get('username')
-    password = data.get('password')
+    dados = request.json or {}
+    usuario_str = dados.get('username')
+    senha = dados.get('password')
 
-    if not username or not password:
-        return jsonify({"msg": "username e password obrigatórios"}), 400
+    if not usuario_str or not senha:
+        return jsonify({"mensagem": "username e password são obrigatórios"}), 400
 
-    user = User.query.filter_by(username=username).first()
-    if not user or not user.check_password(password):
-        return jsonify({"msg": "Credenciais inválidas"}), 401
+    usuario = Usuario.query.filter_by(usuario=usuario_str).first()
+    if not usuario or not usuario.verificar_senha(senha):
+        return jsonify({"mensagem": "Credenciais inválidas"}), 401
 
-    access_token = create_access_token(identity=user.username)
-    audit(user.id, "login", f"user {user.username} logou")
+    token = create_access_token(identity=usuario.usuario)
+    registrar_auditoria(usuario.id, "login", f"Usuário {usuario.usuario} realizou login")
 
-    return jsonify({"access_token": access_token, "role": user.role})
+    return jsonify({
+        "access_token": token,
+        "papel": usuario.papel,
+        "usuario": usuario.usuario,
+        "nome_completo": usuario.nome_completo
+    })
 
 # ---------------------
-# Routes: Users
+# Rotas: Usuários
 # ---------------------
-@app.route('/api/users', methods=['POST'])
-@require_role('admin')
-def create_user(current_user):
-    data = request.json or {}
-    username = data.get('username')
-    password = data.get('password')
-    role = data.get('role', 'operator')
-    full_name = data.get('full_name', '')
+@app.route('/api/usuarios', methods=['POST'])
+@exigir_papel('admin')
+def criar_usuario(usuario_atual):
+    dados = request.json or {}
+    usuario_str = dados.get('username')
+    senha = dados.get('password')
+    papel = dados.get('role', 'operador')
+    nome_completo = dados.get('full_name', '')
 
-    if not username or not password:
-        return jsonify({"msg": "username e password obrigatórios"}), 400
+    if not usuario_str or not senha:
+        return jsonify({"mensagem": "username e password são obrigatórios"}), 400
 
-    if User.query.filter_by(username=username).first():
-        return jsonify({"msg": "username já existe"}), 400
+    if Usuario.query.filter_by(usuario=usuario_str).first():
+        return jsonify({"mensagem": "Já existe um usuário com esse username"}), 400
 
-    u = User(username=username, full_name=full_name, role=role)
-    u.set_password(password)
-    db.session.add(u)
+    novo_usuario = Usuario(
+        usuario=usuario_str,
+        nome_completo=nome_completo,
+        papel=papel
+    )
+    novo_usuario.definir_senha(senha)
+    db.session.add(novo_usuario)
     db.session.commit()
 
-    audit(current_user.id, "create_user", f"criou {username} role={role}")
+    registrar_auditoria(usuario_atual.id, "criar_usuario", f"Criou usuário {usuario_str} com papel {papel}")
 
-    return jsonify({"msg": "Usuário criado", "username": username})
+    return jsonify({"mensagem": "Usuário criado com sucesso", "username": usuario_str})
 
 
-@app.route('/api/users', methods=['GET'])
-@require_role('admin')
-def list_users(current_user):
-    users = User.query.all()
-    out = [{"id": u.id, "username": u.username, "full_name": u.full_name, "role": u.role} for u in users]
-    return jsonify(out)
+@app.route('/api/usuarios', methods=['GET'])
+@exigir_papel('admin')
+def listar_usuarios(usuario_atual):
+    usuarios = Usuario.query.all()
+    retorno = []
+    for u in usuarios:
+        retorno.append({
+            "id": u.id,
+            "username": u.usuario,
+            "nome_completo": u.nome_completo,
+            "papel": u.papel,
+            "criado_em": u.criado_em.isoformat()
+        })
+    return jsonify(retorno)
 
 # ---------------------
-# Routes: Products
+# Rotas: Produtos
 # ---------------------
-@app.route('/api/products', methods=['POST'])
-@require_role('admin', 'operator', 'buyer')
-def add_product(current_user):
-    data = request.json or {}
-    code = data.get('code')
-    name = data.get('name')
-    price = data.get.get('price', 0.0)
-    quantity = data.get('quantity', 0)
+@app.route('/api/produtos', methods=['POST'])
+@exigir_papel('admin', 'operador', 'comprador')
+def adicionar_produto(usuario_atual):
+    dados = request.json or {}
+    codigo = dados.get('code')
+    nome = dados.get('name')
+    preco = dados.get('price', 0.0)
+    quantidade = dados.get('quantity', 0)
 
-    if not code or not name:
-        return jsonify({"msg": "code e name obrigatórios"}), 400
+    if not codigo or not nome:
+        return jsonify({"mensagem": "code e name são obrigatórios"}), 400
 
-    if Product.query.filter_by(code=code).first():
-        return jsonify({"msg": "Produto com esse código já existe"}), 400
+    if Produto.query.filter_by(codigo=codigo).first():
+        return jsonify({"mensagem": "Já existe um produto com esse código"}), 400
 
-    p = Product(code=code, name=name, price=float(price), quantity=int(quantity))
-    db.session.add(p)
+    produto = Produto(
+        codigo=codigo,
+        nome=nome,
+        preco=float(preco),
+        quantidade=int(quantidade)
+    )
+    db.session.add(produto)
     db.session.commit()
 
-    audit(current_user.id, "add_product", f"code={code} name={name} qty={quantity}")
+    registrar_auditoria(
+        usuario_atual.id,
+        "adicionar_produto",
+        f"code={codigo} name={nome} qty={quantidade}"
+    )
 
-    return jsonify({"msg": "Produto adicionado", "product_id": p.id})
+    return jsonify({"mensagem": "Produto adicionado com sucesso", "produto_id": produto.id})
 
 
-@app.route('/api/products', methods=['GET'])
+@app.route('/api/produtos', methods=['GET'])
 @jwt_required()
-def list_products():
-    products = Product.query.all()
-    out = [{"id": p.id, "code": p.code, "name": p.name, "price": p.price, "quantity": p.quantity} for p in products]
-    return jsonify(out)
+def listar_produtos():
+    produtos = Produto.query.all()
+    retorno = []
+    for p in produtos:
+        retorno.append({
+            "id": p.id,
+            "codigo": p.codigo,
+            "nome": p.nome,
+            "preco": p.preco,
+            "quantidade": p.quantidade,
+            "criado_em": p.criado_em.isoformat()
+        })
+    return jsonify(retorno)
 
 
-@app.route('/api/products/<int:product_id>', methods=['PUT'])
-@require_role('admin', 'buyer')
-def update_product(current_user, product_id):
-    p = Product.query.get_or_404(product_id)
-    data = request.json or {}
+@app.route('/api/produtos/<int:produto_id>', methods=['PUT'])
+@exigir_papel('admin', 'comprador')
+def atualizar_produto(usuario_atual, produto_id):
+    produto = Produto.query.get_or_404(produto_id)
+    dados = request.json or {}
 
-    p.name = data.get('name', p.name)
-    p.price = float(data.get('price', p.price))
-    p.quantity = int(data.get('quantity', p.quantity))
+    produto.nome = dados.get('name', produto.nome)
+    produto.preco = float(dados.get('price', produto.preco))
+    produto.quantidade = int(dados.get('quantity', produto.quantidade))
 
     db.session.commit()
-    audit(current_user.id, "update_product", f"id={product_id}")
 
-    return jsonify({"msg": "Produto atualizado"})
+    registrar_auditoria(usuario_atual.id, "atualizar_produto", f"id={produto_id}")
+
+    return jsonify({"mensagem": "Produto atualizado com sucesso"})
 
 
-@app.route('/api/products/<int:product_id>', methods=['DELETE'])
-@require_role('admin')
-def delete_product(current_user, product_id):
-    p = Product.query.get_or_404(product_id)
-    db.session.delete(p)
+@app.route('/api/produtos/<int:produto_id>', methods=['DELETE'])
+@exigir_papel('admin')
+def remover_produto(usuario_atual, produto_id):
+    produto = Produto.query.get_or_404(produto_id)
+    db.session.delete(produto)
     db.session.commit()
 
-    audit(current_user.id, "delete_product", f"id={product_id}")
+    registrar_auditoria(usuario_atual.id, "remover_produto", f"id={produto_id}")
 
-    return jsonify({"msg": "Produto removido"})
+    return jsonify({"mensagem": "Produto removido com sucesso"})
 
 # ---------------------
-# Routes: Sales
+# Rotas: Vendas
 # ---------------------
-@app.route('/api/sales', methods=['POST'])
-@require_role('admin', 'operator', 'buyer')
-def create_sale(current_user):
-    data = request.json or {}
-    items = data.get('items', [])
+@app.route('/api/vendas', methods=['POST'])
+@exigir_papel('admin', 'operador', 'comprador')
+def registrar_venda(usuario_atual):
+    dados = request.json or {}
+    itens = dados.get('items', [])
 
-    if not items:
-        return jsonify({"msg": "items obrigatórios"}), 400
+    if not itens:
+        return jsonify({"mensagem": "items é obrigatório e não pode ser vazio"}), 400
 
-    sale = Sale(created_by=current_user.id, total=0.0)
-    db.session.add(sale)
+    venda = Venda(criado_por_id=usuario_atual.id, total=0.0)
+    db.session.add(venda)
 
     total = 0.0
-    for it in items:
-        code = it.get('code')
-        qty = int(it.get('quantity', 0))
+    for item in itens:
+        codigo = item.get('code')
+        quantidade = int(item.get('quantity', 0))
 
-        product = Product.query.filter_by(code=code).first()
-        if not product:
+        produto = Produto.query.filter_by(codigo=codigo).first()
+        if not produto:
             db.session.rollback()
-            return jsonify({"msg": f"Produto com código {code} não encontrado"}), 400
+            return jsonify({"mensagem": f"Produto com código {codigo} não encontrado"}), 400
 
-        if product.quantity < qty:
+        if produto.quantidade < quantidade:
             db.session.rollback()
-            return jsonify({"msg": f"Estoque insuficiente para {product.name}"}), 400
+            return jsonify({"mensagem": f"Estoque insuficiente para {produto.nome}"}), 400
 
-        subtotal = product.price * qty
-        si = SaleItem(
-            sale_id=sale.id,
-            product_id=product.id,
-            quantity=qty,
-            price=product.price,
+        subtotal = produto.preco * quantidade
+
+        item_venda = ItemVenda(
+            venda_id=venda.id,
+            produto_id=produto.id,
+            quantidade=quantidade,
+            preco=produto.preco,
             subtotal=subtotal
         )
 
-        db.session.add(si)
-        product.quantity -= qty
+        db.session.add(item_venda)
+        produto.quantidade -= quantidade
         total += subtotal
 
-    sale.total = total
+    venda.total = total
     db.session.commit()
 
-    audit(current_user.id, "create_sale", f"sale_id={sale.id} total={total}")
+    registrar_auditoria(
+        usuario_atual.id,
+        "registrar_venda",
+        f"venda_id={venda.id} total={total}"
+    )
 
-    return jsonify({"msg": "Venda registrada", "sale_id": sale.id, "total": total})
-
-# ---------------------
-# Reports
-# ---------------------
-@app.route('/api/reports/stock', methods=['GET'])
-@require_role('admin', 'buyer', 'fiscal')
-def stock_report(current_user):
-    threshold = int(request.args.get('threshold', 10))
-    products = Product.query.order_by(Product.quantity.asc()).all()
-
-    low = [
-        {"code": p.code, "name": p.name, "qty": p.quantity}
-        for p in products if p.quantity <= threshold
-    ]
-
-    return jsonify({"low_stock": low})
+    return jsonify({
+        "mensagem": "Venda registrada com sucesso",
+        "venda_id": venda.id,
+        "total": total
+    })
 
 # ---------------------
-# Inicialização do DB + ADMIN AUTOMÁTICO
+# Rotas: Relatórios
+# ---------------------
+@app.route('/api/relatorios/estoque', methods=['GET'])
+@exigir_papel('admin', 'comprador', 'fiscal')
+def relatorio_estoque(usuario_atual):
+    limite = int(request.args.get('threshold', 10))
+    produtos = Produto.query.order_by(Produto.quantidade.asc()).all()
+
+    baixo_estoque = []
+    for p in produtos:
+        if p.quantidade <= limite:
+            baixo_estoque.append({
+                "codigo": p.codigo,
+                "nome": p.nome,
+                "quantidade": p.quantidade
+            })
+
+    return jsonify({"baixo_estoque": baixo_estoque})
+
+# ---------------------
+# Inicialização do BD + Admin automático
 # ---------------------
 with app.app_context():
     db.create_all()
 
-    # ✅ Criação automática do admin
-    if not User.query.filter_by(username="admin").first():
-        admin = User(
-            username="admin",
-            full_name="Administrador",
-            role="admin"
+    # Criação automática do usuário admin
+    admin = Usuario.query.filter_by(usuario="admin").first()
+    if not admin:
+        admin = Usuario(
+            usuario="admin",
+            nome_completo="Administrador do Sistema",
+            papel="admin"
         )
-        admin.set_password("123456")
+        admin.definir_senha("123456")
         db.session.add(admin)
         db.session.commit()
-        print("✅ Admin criado automaticamente: admin / 123456")
+        print("✅ Usuário admin criado automaticamente: admin / 123456")
 
 # ---------------------
 # Execução local
 # ---------------------
 if __name__ == '__main__':
-    print("DB pronto. Rode `flask run` para iniciar a aplicação.")
+    app.run(debug=True)
