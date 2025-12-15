@@ -81,7 +81,6 @@ class LogAuditoria(db.Model):
     acao = db.Column(db.String(200))
     detalhes = db.Column(db.String(1000))
     registrado_em = db.Column(db.DateTime, default=datetime.utcnow)
-
 # ---------------------
 # Funções auxiliares
 # ---------------------
@@ -176,7 +175,6 @@ def listar_usuarios(usuario_atual):
             "criado_em": u.criado_em.isoformat()
         })
     return jsonify(retorno)
-
 # ---------------------
 # Rotas: Produtos
 # ---------------------
@@ -257,7 +255,6 @@ def remover_produto(usuario_atual, produto_id):
     registrar_auditoria(usuario_atual.id, "remover_produto", f"id={produto_id}")
 
     return jsonify({"mensagem": "Produto removido com sucesso"})
-
 # ---------------------
 # Rotas: Vendas
 # ---------------------
@@ -289,8 +286,157 @@ def registrar_venda(usuario_atual):
 
         subtotal = produto.preco * quantidade
 
+        # ✅ ESTE BLOCO É O QUE ESTAVA DANDO ERRO — AGORA ESTÁ PERFEITO
         item_venda = ItemVenda(
             venda_id=venda.id,
             produto_id=produto.id,
             quantidade=quantidade,
-            preco=produto.pre
+            preco=produto.preco,
+            subtotal=subtotal
+        )
+
+        db.session.add(item_venda)
+        produto.quantidade -= quantidade
+        total += subtotal
+
+    venda.total = total
+    db.session.commit()
+
+    registrar_auditoria(
+        usuario_atual.id,
+        "registrar_venda",
+        f"venda_id={venda.id} total={total}"
+    )
+
+    return jsonify({
+        "mensagem": "Venda registrada com sucesso",
+        "venda_id": venda.id,
+        "total": total
+    })
+# ---------------------
+# Relatórios
+# ---------------------
+@app.route('/api/relatorios/estoque', methods=['GET'])
+@exigir_papel('admin', 'comprador', 'fiscal')
+def relatorio_estoque(usuario_atual):
+    limite = int(request.args.get('threshold', 10))
+    produtos = Produto.query.order_by(Produto.quantidade.asc()).all()
+
+    baixo_estoque = []
+    for p in produtos:
+        if p.quantidade <= limite:
+            baixo_estoque.append({
+                "codigo": p.codigo,
+                "nome": p.nome,
+                "quantidade": p.quantidade
+            })
+
+    return jsonify({"baixo_estoque": baixo_estoque})
+
+
+# ✅ NOVO: Vendas por dia
+@app.route('/api/relatorios/vendas_por_dia', methods=['GET'])
+@exigir_papel('admin', 'comprador', 'fiscal')
+def relatorio_vendas_por_dia(usuario_atual):
+    resultados = (
+        db.session.query(
+            db.func.date(Venda.criado_em).label("dia"),
+            db.func.sum(Venda.total).label("total")
+        )
+        .group_by(db.func.date(Venda.criado_em))
+        .order_by(db.func.date(Venda.criado_em))
+        .all()
+    )
+
+    retorno = []
+    for dia, total in resultados:
+        retorno.append({
+            "dia": str(dia),
+            "total": float(total)
+        })
+
+    return jsonify(retorno)
+
+
+# ✅ NOVO: Totalizador
+@app.route('/api/relatorios/totalizador', methods=['GET'])
+@exigir_papel('admin', 'comprador', 'fiscal')
+def relatorio_totalizador(usuario_atual):
+    total_vendido = db.session.query(db.func.sum(Venda.total)).scalar() or 0
+    quantidade_vendas = db.session.query(db.func.count(Venda.id)).scalar() or 0
+
+    return jsonify({
+        "total_vendido": float(total_vendido),
+        "quantidade_vendas": quantidade_vendas
+    })
+
+
+# ✅ NOVO: Produtos mais vendidos
+@app.route('/api/relatorios/produtos_mais_vendidos', methods=['GET'])
+@exigir_papel('admin', 'comprador', 'fiscal')
+def relatorio_produtos_mais_vendidos(usuario_atual):
+    resultados = (
+        db.session.query(
+            Produto.nome.label("produto"),
+            db.func.sum(ItemVenda.quantidade).label("quantidade_vendida")
+        )
+        .join(ItemVenda, Produto.id == ItemVenda.produto_id)
+        .group_by(Produto.nome)
+        .order_by(db.func.sum(ItemVenda.quantidade).desc())
+        .all()
+    )
+
+    retorno = []
+    for produto, quantidade in resultados:
+        retorno.append({
+            "produto": produto,
+            "quantidade_vendida": int(quantidade)
+        })
+
+    return jsonify(retorno)
+# ---------------------
+# Servir FRONTEND
+# ---------------------
+@app.route('/')
+def index():
+    return send_from_directory('frontend', 'index.html')
+
+@app.route('/produtos')
+def pagina_produtos():
+    return send_from_directory('frontend', 'produtos.html')
+
+@app.route('/relatorios')
+def pagina_relatorios():
+    return send_from_directory('frontend', 'relatorios.html')
+
+@app.route('/vendas')
+def pagina_vendas():
+    return send_from_directory('frontend', 'vendas.html')
+
+@app.route('/js/<path:arquivo>')
+def arquivos_js(arquivo):
+    return send_from_directory('frontend/js', arquivo)
+
+# ---------------------
+# Inicialização do BD + Admin automático
+# ---------------------
+with app.app_context():
+    db.create_all()
+
+    admin = Usuario.query.filter_by(usuario="admin").first()
+    if not admin:
+        admin = Usuario(
+            usuario="admin",
+            nome_completo="Administrador do Sistema",
+            papel="admin"
+        )
+        admin.definir_senha("123456")
+        db.session.add(admin)
+        db.session.commit()
+        print("✅ Usuário admin criado automaticamente: admin / 123456")
+
+# ---------------------
+# Execução local
+# ---------------------
+if __name__ == '__main__':
+    app.run(debug=True)
