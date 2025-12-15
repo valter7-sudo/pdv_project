@@ -1,16 +1,19 @@
 from datetime import datetime, timedelta
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import (
     JWTManager, create_access_token, jwt_required,
     get_jwt_identity
 )
+from flask_cors import CORS
 
 # ---------------------
 # Configuração básica
 # ---------------------
-app = Flask(__name__)
+app = Flask(__name__, static_folder="frontend", static_url_path="")
+CORS(app)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pdv.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'troque_esta_chave_por_uma_super_secreta'
@@ -96,7 +99,6 @@ def exigir_papel(*papeis_permitidos):
             usuario = Usuario.query.filter_by(usuario=identidade).first()
             if not usuario or usuario.papel not in papeis_permitidos:
                 return jsonify({"mensagem": "Permissão negada"}), 403
-            # passamos o usuário atual como primeiro argumento da função
             return fn(usuario, *args, **kwargs)
         wrapper.__name__ = fn.__name__
         return wrapper
@@ -291,70 +293,4 @@ def registrar_venda(usuario_atual):
             venda_id=venda.id,
             produto_id=produto.id,
             quantidade=quantidade,
-            preco=produto.preco,
-            subtotal=subtotal
-        )
-
-        db.session.add(item_venda)
-        produto.quantidade -= quantidade
-        total += subtotal
-
-    venda.total = total
-    db.session.commit()
-
-    registrar_auditoria(
-        usuario_atual.id,
-        "registrar_venda",
-        f"venda_id={venda.id} total={total}"
-    )
-
-    return jsonify({
-        "mensagem": "Venda registrada com sucesso",
-        "venda_id": venda.id,
-        "total": total
-    })
-
-# ---------------------
-# Rotas: Relatórios
-# ---------------------
-@app.route('/api/relatorios/estoque', methods=['GET'])
-@exigir_papel('admin', 'comprador', 'fiscal')
-def relatorio_estoque(usuario_atual):
-    limite = int(request.args.get('threshold', 10))
-    produtos = Produto.query.order_by(Produto.quantidade.asc()).all()
-
-    baixo_estoque = []
-    for p in produtos:
-        if p.quantidade <= limite:
-            baixo_estoque.append({
-                "codigo": p.codigo,
-                "nome": p.nome,
-                "quantidade": p.quantidade
-            })
-
-    return jsonify({"baixo_estoque": baixo_estoque})
-
-# ---------------------
-# Inicialização do BD + Admin automático
-# ---------------------
-with app.app_context():
-    db.create_all()
-
-    # Criação automática do usuário admin
-    admin = Usuario.query.filter_by(usuario="admin").first()
-    if not admin:
-        admin = Usuario(
-            usuario="admin",
-            nome_completo="Administrador do Sistema",
-            papel="admin"
-        )
-        admin.definir_senha("123456")
-        db.session.add(admin)
-        db.session.commit()
-        print("✅ Usuário admin criado automaticamente: admin / 123456")
-
-# ---------------------
-# Execução local
-# ---------------------
-if __name__ == '__main__':
-    app.run(debug=True)
+            preco=produto.pre
