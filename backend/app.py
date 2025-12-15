@@ -63,7 +63,7 @@ class SaleItem(db.Model):
 
 
 class AuditLog(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_primary=True)
     user_id = db.Column(db.Integer, nullable=True)
     action = db.Column(db.String(200))
     details = db.Column(db.String(1000))
@@ -156,7 +156,7 @@ def add_product(current_user):
     data = request.json or {}
     code = data.get('code')
     name = data.get('name')
-    price = data.get('price', 0.0)
+    price = data.get.get('price', 0.0)
     quantity = data.get('quantity', 0)
 
     if not code or not name:
@@ -275,10 +275,22 @@ def stock_report(current_user):
     return jsonify({"low_stock": low})
 
 # ---------------------
-# Inicialização do DB no Render
+# Inicialização do DB + ADMIN AUTOMÁTICO
 # ---------------------
 with app.app_context():
     db.create_all()
+
+    # ✅ Criação automática do admin
+    if not User.query.filter_by(username="admin").first():
+        admin = User(
+            username="admin",
+            full_name="Administrador",
+            role="admin"
+        )
+        admin.set_password("123456")
+        db.session.add(admin)
+        db.session.commit()
+        print("✅ Admin criado automaticamente: admin / 123456")
 
 # ---------------------
 # Execução local
