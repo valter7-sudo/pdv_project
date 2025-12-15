@@ -1,4 +1,3 @@
-# backend/app.py
 from datetime import datetime, timedelta
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
@@ -262,4 +261,27 @@ def create_sale(current_user):
 # ---------------------
 # Reports
 # ---------------------
-@app.route
+@app.route('/api/reports/stock', methods=['GET'])
+@require_role('admin', 'buyer', 'fiscal')
+def stock_report(current_user):
+    threshold = int(request.args.get('threshold', 10))
+    products = Product.query.order_by(Product.quantity.asc()).all()
+
+    low = [
+        {"code": p.code, "name": p.name, "qty": p.quantity}
+        for p in products if p.quantity <= threshold
+    ]
+
+    return jsonify({"low_stock": low})
+
+# ---------------------
+# Inicialização do DB no Render
+# ---------------------
+with app.app_context():
+    db.create_all()
+
+# ---------------------
+# Execução local
+# ---------------------
+if __name__ == '__main__':
+    print("DB pronto. Rode `flask run` para iniciar a aplicação.")
