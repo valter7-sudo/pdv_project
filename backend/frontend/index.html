@@ -1,45 +1,227 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <title>Login - PDV</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <meta charset="UTF-8">
+  <title>PDV ValterSoft - Painel Premium</title>
 
-    <style>
-        body {
-            background-color: #f5f5f5;
-        }
-        .login-container {
-            max-width: 400px;
-            margin: 120px auto;
-            padding: 30px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 0 12px rgba(0,0,0,0.1);
-        }
-    </style>
+  <!-- Ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0a0a0f;
+      color: #e0e0ff;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* MENU LATERAL */
+    nav {
+      width: 260px;
+      background: #05050a;
+      border-right: 1px solid #1a1a2e;
+      padding: 20px;
+      box-shadow: 0 0 20px #4b0082;
+    }
+
+    nav h2 {
+      color: #7f00ff;
+      text-shadow: 0 0 10px #7f00ff;
+      margin-top: 0;
+      margin-bottom: 25px;
+      font-size: 22px;
+      text-align: center;
+    }
+
+    nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #00bfff;
+      padding: 12px;
+      margin: 8px 0;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: 0.2s;
+      font-size: 15px;
+    }
+
+    nav a:hover {
+      background: #1a0033;
+      box-shadow: 0 0 10px #7f00ff;
+      transform: translateX(5px);
+    }
+
+    nav i {
+      width: 20px;
+      text-align: center;
+      color: #7f00ff;
+      text-shadow: 0 0 8px #7f00ff;
+    }
+
+    /* ÁREA PRINCIPAL */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      background: #0f0f1a;
+      padding: 15px 25px;
+      border-bottom: 1px solid #1a1a2e;
+      box-shadow: 0 0 15px #4b0082;
+    }
+
+    header h3 {
+      margin: 0;
+      color: #9d4bff;
+      text-shadow: 0 0 10px #9d4bff;
+    }
+
+    #conteudo {
+      padding: 25px;
+      overflow-y: auto;
+    }
+
+    /* CARDS DO DASHBOARD */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .card {
+      background: #0f0f1f;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #2a0055;
+      box-shadow: 0 0 15px #4b0082;
+      transition: 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 25px #7f00ff;
+    }
+
+    .card h4 {
+      margin: 0 0 10px 0;
+      color: #00bfff;
+    }
+
+    .card p {
+      font-size: 22px;
+      color: #9d4bff;
+      text-shadow: 0 0 8px #9d4bff;
+    }
+
+    /* BOTÃO SAIR */
+    .logout {
+      margin-top: 20px;
+      padding: 10px;
+      background: #7f00ff;
+      color: white;
+      border: none;
+      width: 100%;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+      box-shadow: 0 0 10px #7f00ff;
+      transition: 0.2s;
+    }
+
+    .logout:hover {
+      background: #5500aa;
+      box-shadow: 0 0 20px #9d4bff;
+    }
+  </style>
 </head>
 
 <body>
 
-    <div class="login-container">
-        <h3 class="text-center mb-4">Acesso ao Sistema PDV</h3>
+  <!-- MENU LATERAL -->
+  <nav>
+    <h2>PDV ValterSoft</h2>
 
-        <div class="mb-3">
-            <label class="form-label">Usuário</label>
-            <input type="text" id="usuario" class="form-control" placeholder="Digite seu usuário">
+    <a href="#" onclick="carregar('dashboard')"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+    <a href="#" onclick="carregar('produtos')"><i class="fa-solid fa-box"></i> Produtos</a>
+    <a href="#" onclick="carregar('categorias')"><i class="fa-solid fa-tags"></i> Categorias</a>
+    <a href="#" onclick="carregar('estoque')"><i class="fa-solid fa-warehouse"></i> Estoque</a>
+    <a href="#" onclick="carregar('vendas')"><i class="fa-solid fa-cart-shopping"></i> Vendas</a>
+    <a href="#" onclick="carregar('caixa')"><i class="fa-solid fa-cash-register"></i> Caixa</a>
+    <a href="#" onclick="carregar('clientes')"><i class="fa-solid fa-users"></i> Clientes</a>
+    <a href="#" onclick="carregar('usuarios')"><i class="fa-solid fa-user-gear"></i> Usuários</a>
+    <a href="#" onclick="carregar('relatorios')"><i class="fa-solid fa-file-lines"></i> Relatórios</a>
+    <a href="#" onclick="carregar('financeiro')"><i class="fa-solid fa-coins"></i> Financeiro</a>
+    <a href="#" onclick="carregar('config')"><i class="fa-solid fa-gear"></i> Configurações</a>
+    <a href="#" onclick="carregar('suporte')"><i class="fa-solid fa-headset"></i> Suporte</a>
+    <a href="#" onclick="carregar('sobre')"><i class="fa-solid fa-circle-info"></i> Sobre</a>
+
+    <button class="logout" onclick="logout()">Sair</button>
+  </nav>
+
+  <!-- ÁREA PRINCIPAL -->
+  <main>
+    <header>
+      <h3>Painel Premium – Neon Tech</h3>
+    </header>
+
+    <div id="conteudo">
+      <!-- CARDS INICIAIS -->
+      <div class="cards">
+        <div class="card">
+          <h4>Vendas Hoje</h4>
+          <p>R$ 0,00</p>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Senha</label>
-            <input type="password" id="senha" class="form-control" placeholder="Digite sua senha">
+        <div class="card">
+          <h4>Vendas no Mês</h4>
+          <p>R$ 0,00</p>
         </div>
 
-        <button class="btn btn-primary w-100" onclick="login()">Entrar</button>
+        <div class="card">
+          <h4>Produtos Cadastrados</h4>
+          <p>0</p>
+        </div>
 
-        <p id="erro" class="text-danger mt-3 text-center"></p>
+        <div class="card">
+          <h4>Itens em Falta</h4>
+          <p>0</p>
+        </div>
+      </div>
     </div>
+  </main>
 
-    <script src="js/auth.js"></script>
+  <script>
+    function carregar(pagina) {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Você precisa estar logado.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      fetch(`${pagina}.html`)
+        .then(res => res.text())
+        .then(html => {
+          document.getElementById("conteudo").innerHTML = html;
+        });
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "login.html";
+    }
+
+    if (!localStorage.getItem("token")) {
+      window.location.href = "login.html";
+    }
+  </script>
+
 </body>
 </html>

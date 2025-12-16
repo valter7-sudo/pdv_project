@@ -1,39 +1,57 @@
-const API_RELATORIOS = "https://pdv-project.onrender.com/api/relatorios";
 const token = localStorage.getItem("token");
+const urlVendas = "https://pdv-backend-dp61.onrender.com/api/vendas";
 
-const headers = {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`
-};
+// GERAR RELATÓRIO
+async function gerarRelatorio() {
+  const inicio = document.getElementById("dataInicio").value;
+  const fim = document.getElementById("dataFim").value;
 
-// =============================
-// RELATÓRIO DE ESTOQUE
-// =============================
-async function carregarEstoque() {
-    const tabela = document.getElementById("tabelaEstoque");
+  if (!inicio || !fim) {
+    alert("Selecione a data inicial e final.");
+    return;
+  }
 
-    try {
-        const resposta = await fetch(`${API_RELATORIOS}/estoque`, { headers });
-        const dados = await resposta.json();
+  const resposta = await fetch(`${urlVendas}?inicio=${inicio}&fim=${fim}`, {
+    headers: { "Authorization": `Bearer ${token}` }
+  });
 
-        tabela.innerHTML = "";
+  const vendas = await resposta.json();
 
-        dados.baixo_estoque.forEach(item => {
-            const linha = document.createElement("tr");
-            linha.innerHTML = `
-                <td>${item.codigo}</td>
-                <td>${item.nome}</td>
-                <td>${item.quantidade}</td>
-            `;
-            tabela.appendChild(linha);
-        });
-
-    } catch (e) {
-        tabela.innerHTML = "<tr><td colspan='3'>Erro ao carregar dados.</td></tr>";
-    }
+  preencherTabela(vendas);
+  atualizarResumo(vendas);
 }
 
-// =============================
-// CHAMAR FUNÇÃO EXISTENTE
-// =============================
-carregarEstoque();
+// ATUALIZAR RESUMO
+function atualizarResumo(vendas) {
+  let totalVendido = 0;
+  let totalItens = 0;
+
+  vendas.forEach(v => {
+    totalVendido += v.total;
+    totalItens += v.itens.reduce((soma, item) => soma + item.qtd, 0);
+  });
+
+  document.getElementById("totalVendido").innerText = 
+    `R$ ${totalVendido.toFixed(2)}`;
+
+  document.getElementById("totalItens").innerText = totalItens;
+}
+
+// PREENCHER TABELA
+function preencherTabela(vendas) {
+  const tbody = document.querySelector("#tabelaRelatorios tbody");
+  tbody.innerHTML = "";
+
+  vendas.forEach(v => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td style="padding:10px; border:1px solid #4b0082;">${v.id}</td>
+      <td style="padding:10px; border:1px solid #4b0082;">${v.data}</td>
+      <td style="padding:10px; border:1px solid #4b0082;">R$ ${v.total.toFixed(2)}</td>
+      <td style="padding:10px; border:1px solid #4b0082;">${v.itens.length}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}

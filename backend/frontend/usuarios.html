@@ -1,0 +1,33 @@
+<h2 style="color:#00bfff; text-shadow:0 0 8px #00bfff;">Gerenciar Usuários</h2>
+
+<!-- FORMULÁRIO DE CADASTRO -->
+<form id="formUsuario" style="margin-bottom:30px;">
+  <input id="nomeUsuario" placeholder="Nome do usuário" required 
+    style="width:100%; padding:12px; margin-bottom:10px; background:#1a1a2e; color:white; border:1px solid #4b0082;">
+
+  <input id="emailUsuario" type="email" placeholder="E-mail" required
+    style="width:100%; padding:12px; margin-bottom:10px; background:#1a1a2e; color:white; border:1px solid #4b0082;">
+
+  <input id="senhaUsuario" type="password" placeholder="Senha" required
+    style="width:100%; padding:12px; margin-bottom:10px; background:#1a1a2e; color:white; border:1px solid #4b0082;">
+
+  <button type="submit" 
+    style="padding:10px 20px; background:#7f00ff; color:white; border:none; border-radius:6px; cursor:pointer; box-shadow:0 0 10px #7f00ff;">
+    Cadastrar Usuário
+  </button>
+</form>
+
+<!-- TABELA DE USUÁRIOS -->
+<table id="tabelaUsuarios" style="width:100%; border-collapse:collapse;">
+  <thead>
+    <tr style="background:#1a0033; color:#00bfff;">
+      <th style="padding:10px; border:1px solid #4b0082;">ID</th>
+      <th style="padding:10px; border:1px solid #4b0082;">Nome</th>
+      <th style="padding:10px; border:1px solid #4b0082;">E-mail</th>
+      <th style="padding:10px; border:1px solid #4b0082;">Ações</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script src="js/usuarios.js"></script>

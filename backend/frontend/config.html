@@ -1,0 +1,48 @@
+<h2 style="color:#00bfff; text-shadow:0 0 8px #00bfff;">Configurações do Sistema</h2>
+
+<!-- DADOS DA EMPRESA -->
+<h3 style="color:#9d4bff;">Dados da Empresa</h3>
+
+<form id="formEmpresa" style="margin-bottom:30px;">
+  <input id="nomeEmpresa" placeholder="Nome da empresa" required
+    style="width:100%; padding:12px; margin-bottom:10px; background:#1a1a2e; color:white; border:1px solid #4b0082;">
+
+  <input id="cnpjEmpresa" placeholder="CNPJ"
+    style="width:100%; padding:12px; margin-bottom:10px; background:#1a1a2e; color:white; border:1px solid #4b0082;">
+
+  <input id="enderecoEmpresa" placeholder="Endereço"
+    style="width:100%; padding:12px; margin-bottom:10px; background:#1a1a2e; color:white; border:1px solid #4b0082;">
+
+  <button type="submit"
+    style="padding:10px 20px; background:#7f00ff; color:white; border:none; border-radius:6px; cursor:pointer; box-shadow:0 0 10px #7f00ff;">
+    Salvar Dados
+  </button>
+</form>
+
+<!-- CONFIGURAÇÕES DO SISTEMA -->
+<h3 style="color:#9d4bff;">Preferências do Sistema</h3>
+
+<div style="margin-bottom:20px;">
+  <label style="color:white;">Tema:</label>
+  <select id="temaSistema"
+    style="padding:10px; background:#1a1a2e; color:white; border:1px solid #4b0082;">
+    <option value="dark">Dark (padrão)</option>
+    <option value="light">Light</option>
+  </select>
+</div>
+
+<div style="margin-bottom:20px;">
+  <label style="color:white;">Notificações:</label>
+  <select id="notificacoesSistema"
+    style="padding:10px; background:#1a1a2e; color:white; border:1px solid #4b0082;">
+    <option value="on">Ativadas</option>
+    <option value="off">Desativadas</option>
+  </select>
+</div>
+
+<button onclick="salvarPreferencias()"
+  style="padding:10px 20px; background:#00bfff; color:black; border:none; border-radius:6px; cursor:pointer; box-shadow:0 0 10px #00bfff;">
+  Salvar Preferências
+</button>
+
+<script src="js/config.js"></script>

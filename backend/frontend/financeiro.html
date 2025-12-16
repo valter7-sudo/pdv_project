@@ -1,0 +1,53 @@
+<h2 style="color:#00bfff; text-shadow:0 0 8px #00bfff;">Controle Financeiro</h2>
+
+<!-- RESUMO FINANCEIRO -->
+<div style="display:flex; gap:20px; margin-bottom:20px;">
+  <div style="background:#0f0f1f; padding:20px; border-radius:8px; border:1px solid #4b0082; flex:1;">
+    <h3 style="color:#00bfff;">Total a Receber</h3>
+    <p id="totalReceber" style="font-size:22px; color:#9d4bff;">R$ 0,00</p>
+  </div>
+
+  <div style="background:#0f0f1f; padding:20px; border-radius:8px; border:1px solid #4b0082; flex:1;">
+    <h3 style="color:#00bfff;">Total a Pagar</h3>
+    <p id="totalPagar" style="font-size:22px; color:#ff5555;">R$ 0,00</p>
+  </div>
+</div>
+
+<!-- FORMULÁRIO DE LANÇAMENTO -->
+<h3 style="color:#9d4bff;">Novo Lançamento</h3>
+
+<div style="margin-bottom:20px;">
+  <select id="tipoLanc" 
+    style="padding:10px; background:#1a1a2e; color:white; border:1px solid #4b0082; width:200px;">
+    <option value="receber">A Receber</option>
+    <option value="pagar">A Pagar</option>
+  </select>
+
+  <input id="descricaoLanc" placeholder="Descrição" 
+    style="padding:10px; background:#1a1a2e; color:white; border:1px solid #4b0082; width:300px;">
+
+  <input id="valorLanc" type="number" step="0.01" placeholder="Valor" 
+    style="padding:10px; background:#1a1a2e; color:white; border:1px solid #4b0082; width:200px;">
+
+  <button onclick="registrarLancamento()" 
+    style="padding:10px 20px; background:#7f00ff; color:white; border:none; border-radius:6px; cursor:pointer; box-shadow:0 0 10px #7f00ff;">
+    Registrar
+  </button>
+</div>
+
+<!-- TABELA DE LANÇAMENTOS -->
+<table id="tabelaFinanceiro" style="width:100%; border-collapse:collapse;">
+  <thead>
+    <tr style="background:#1a0033; color:#00bfff;">
+      <th style="padding:10px; border:1px solid #4b0082;">ID</th>
+      <th style="padding:10px; border:1px solid #4b0082;">Tipo</th>
+      <th style="padding:10px; border:1px solid #4b0082;">Descrição</th>
+      <th style="padding:10px; border:1px solid #4b0082;">Valor</th>
+      <th style="padding:10px; border:1px solid #4b0082;">Data</th>
+      <th style="padding:10px; border:1px solid #4b0082;">Ações</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script src="js/financeiro.js"></script>

@@ -1,0 +1,55 @@
+<h2 style="color:#00bfff; text-shadow:0 0 8px #00bfff;">Controle de Caixa</h2>
+
+<!-- STATUS DO CAIXA -->
+<div id="statusCaixa" 
+  style="background:#0f0f1f; padding:20px; border-radius:8px; border:1px solid #4b0082; margin-bottom:20px;">
+  <h3 style="color:#9d4bff;">Status do Caixa</h3>
+  <p id="textoStatus" style="font-size:20px; color:#00bfff;">Carregando...</p>
+</div>
+
+<!-- BOTÕES DE AÇÃO -->
+<div style="display:flex; gap:10px; margin-bottom:20px;">
+  <button onclick="abrirCaixa()" 
+    style="padding:10px 20px; background:#00bfff; color:black; border:none; border-radius:6px; cursor:pointer; box-shadow:0 0 10px #00bfff;">
+    Abrir Caixa
+  </button>
+
+  <button onclick="fecharCaixa()" 
+    style="padding:10px 20px; background:#7f00ff; color:white; border:none; border-radius:6px; cursor:pointer; box-shadow:0 0 10px #7f00ff;">
+    Fechar Caixa
+  </button>
+</div>
+
+<!-- MOVIMENTAÇÕES -->
+<h3 style="color:#9d4bff;">Registrar Movimentação</h3>
+
+<div style="margin-bottom:20px;">
+  <select id="tipoMov" 
+    style="padding:10px; background:#1a1a2e; color:white; border:1px solid #4b0082; width:200px;">
+    <option value="entrada">Entrada</option>
+    <option value="saida">Saída</option>
+  </select>
+
+  <input id="valorMov" type="number" step="0.01" placeholder="Valor" 
+    style="padding:10px; background:#1a1a2e; color:white; border:1px solid #4b0082; width:200px;">
+
+  <button onclick="registrarMovimentacao()" 
+    style="padding:10px 20px; background:#9d4bff; color:white; border:none; border-radius:6px; cursor:pointer; box-shadow:0 0 10px #9d4bff;">
+    Registrar
+  </button>
+</div>
+
+<!-- TABELA DE MOVIMENTAÇÕES -->
+<table id="tabelaCaixa" style="width:100%; border-collapse:collapse;">
+  <thead>
+    <tr style="background:#1a0033; color:#00bfff;">
+      <th style="padding:10px; border:1px solid #4b0082;">ID</th>
+      <th style="padding:10px; border:1px solid #4b0082;">Tipo</th>
+      <th style="padding:10px; border:1px solid #4b0082;">Valor</th>
+      <th style="padding:10px; border:1px solid #4b0082;">Data</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script src="js/caixa.js"></script>

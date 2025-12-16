@@ -1,64 +1,43 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <title>Relatórios - PDV</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-</head>
+<h2 style="color:#00bfff; text-shadow:0 0 8px #00bfff;">Relatórios de Vendas</h2>
 
-<body class="p-4">
+<!-- FILTRO POR DATA -->
+<div style="margin-bottom:20px; display:flex; gap:10px;">
+  <input id="dataInicio" type="date" 
+    style="padding:10px; background:#1a1a2e; color:white; border:1px solid #4b0082;">
+  
+  <input id="dataFim" type="date" 
+    style="padding:10px; background:#1a1a2e; color:white; border:1px solid #4b0082;">
+  
+  <button onclick="gerarRelatorio()" 
+    style="padding:10px 20px; background:#7f00ff; color:white; border:none; border-radius:6px; cursor:pointer; box-shadow:0 0 10px #7f00ff;">
+    Gerar Relatório
+  </button>
+</div>
 
-    <h3>Relatórios do Sistema</h3>
+<!-- RESUMO -->
+<div style="display:flex; gap:20px; margin-bottom:20px;">
+  <div style="background:#0f0f1f; padding:20px; border-radius:8px; border:1px solid #4b0082; flex:1;">
+    <h3 style="color:#00bfff;">Total Vendido</h3>
+    <p id="totalVendido" style="font-size:22px; color:#9d4bff;">R$ 0,00</p>
+  </div>
 
-    <hr>
+  <div style="background:#0f0f1f; padding:20px; border-radius:8px; border:1px solid #4b0082; flex:1;">
+    <h3 style="color:#00bfff;">Itens Vendidos</h3>
+    <p id="totalItens" style="font-size:22px; color:#9d4bff;">0</p>
+  </div>
+</div>
 
-    <h4>Vendas por Dia</h4>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Dia</th>
-                <th>Total Vendido</th>
-            </tr>
-        </thead>
-        <tbody id="tabelaVendasDia"></tbody>
-    </table>
+<!-- TABELA DE VENDAS -->
+<table id="tabelaRelatorios" style="width:100%; border-collapse:collapse;">
+  <thead>
+    <tr style="background:#1a0033; color:#00bfff;">
+      <th style="padding:10px; border:1px solid #4b0082;">ID</th>
+      <th style="padding:10px; border:1px solid #4b0082;">Data</th>
+      <th style="padding:10px; border:1px solid #4b0082;">Total</th>
+      <th style="padding:10px; border:1px solid #4b0082;">Itens</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-    <hr>
-
-    <h4>Totalizador Geral</h4>
-    <p><strong>Total vendido:</strong> R$ <span id="totalVendido">0.00</span></p>
-    <p><strong>Quantidade de vendas:</strong> <span id="quantidadeVendas">0</span></p>
-
-    <hr>
-
-    <h4>Produtos Mais Vendidos</h4>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Produto</th>
-                <th>Quantidade Vendida</th>
-            </tr>
-        </thead>
-        <tbody id="tabelaMaisVendidos"></tbody>
-    </table>
-
-    <hr>
-
-    <h4>Movimentação de Estoque</h4>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Produto</th>
-                <th>Tipo</th>
-                <th>Quantidade</th>
-                <th>Motivo</th>
-                <th>Data/Hora</th>
-                <th>Usuário</th>
-            </tr>
-        </thead>
-        <tbody id="tabelaEstoque"></tbody>
-    </table>
-
-    <script src="js/relatorios.js"></script>
-</body>
-</html>
+<script src="js/relatorios.js"></script>
