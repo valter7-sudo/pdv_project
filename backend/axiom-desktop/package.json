@@ -1,0 +1,15 @@
+{
+  "name": "axiom-tech-pdv",
+  "version": "1.0.0",
+  "description": "Axiom Tech PDV - ponto de venda profissional com acesso online.",
+  "main": "main.js",
+  "author": "Valter Costa / Axiom Tech",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-packager . \"Axiom Tech PDV\" --platform=win32 --arch=x64 --icon=icon.ico --overwrite --out=dist"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-packager": "^17.1.1"
+  }
+}
